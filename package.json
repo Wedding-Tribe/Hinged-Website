@@ -2,7 +2,6 @@
   "name": "hinged-website",
   "private": true,
   "version": "1.0.0",
-  "description": "Public showcase landing website & interactive wedding coordinator suite for Hinged",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,6 +15,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.4.2"
   }

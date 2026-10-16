@@ -1,1219 +1,803 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import {
-  Sparkles,
-  MessageCircle,
-  Calendar,
-  Users,
-  CheckCircle2,
-  Hotel,
-  ArrowRight,
-  ShieldCheck,
-  Github,
   Heart,
-  ChevronRight,
-  ChevronDown,
-  ExternalLink,
-  MapPin,
+  Calendar,
   Clock,
-  Phone,
-  Mail,
-  Send,
-  X,
-  Check,
-  DollarSign,
-  Utensils,
+  MapPin,
+  CheckCircle2,
+  Users,
+  MessageCircle,
   Share2,
-  Sliders,
-  Copy,
-  Info,
-  Menu,
+  Sparkles,
+  ShieldCheck,
+  FileSpreadsheet,
+  ArrowRight,
+  ChevronDown,
+  X,
+  Phone,
+  Gift,
+  ExternalLink,
+  Crown,
+  BookOpen,
+  Flower2
 } from 'lucide-react';
-import FounderConnectModal from './FounderConnectModal';
 
-// Top Indian Wedding Destination Cities
-const WEDDING_CITIES = [
-  'Jaipur, Rajasthan',
-  'Udaipur, Rajasthan',
-  'Goa (North & South)',
-  'Delhi NCR (Gurgaon / Noida)',
-  'Mumbai / Alibaug',
-  'Bengaluru, Karnataka',
-  'Jodhpur, Rajasthan',
-  'Agra, Uttar Pradesh',
-  'Mussoorie / Dehradun',
-  'Kerala (Kochi / Kovalam)',
-  'Hyderabad, Telangana',
-  'Pune / Lonavala',
-  'Kolkata, West Bengal',
-  'Chandigarh / Tricity',
-  'Other / International Destination',
-];
-
-// Themes available in Hinged
-const THEMES = [
-  {
-    id: 'royal-indian',
+const THEMES = {
+  royal: {
+    id: 'royal',
     name: 'Royal Indian',
-    tagline: 'Palace Mandap Grandeur',
-    badgeEmoji: '👑',
-    bg: '#2A0812',
-    accent: '#D4AF37',
-    textColor: 'text-amber-50',
-    headerColor: 'text-amber-200',
-    desc: 'Deep jewel burgundy, royal navy, gold foil ornamentation, and regal palace ambiance.',
-    sampleBrideGroom: 'Aarav & Meera',
-    sampleVenue: 'Jai Mahal Palace, Jaipur',
-    sampleCeremonies: ['Royal Sangeet & Ghoomar', 'Shahi Pheras & Mandap', 'Royal Darbar Reception'],
-    borderColor: 'border-amber-500/40',
+    icon: Crown,
+    badge: 'Regal Jewel',
+    bg: 'bg-[#581c24]',
+    border: 'border-[#d4af37]',
+    accentText: 'text-[#d4af37]',
+    accentBg: 'bg-[#d4af37]',
+    cardBg: 'bg-[#43141b]',
+    tagline: 'Palace Mandap Grandeur with Rich Burgundy & Gold Filigree',
   },
-  {
-    id: 'modern-editorial',
+  editorial: {
+    id: 'editorial',
     name: 'Modern Editorial',
-    tagline: 'Vogue-Inspired High Fashion',
-    badgeEmoji: '📰',
-    bg: '#FFFFFF',
-    accent: '#171717',
-    textColor: 'text-neutral-700',
-    headerColor: 'text-neutral-950',
-    desc: 'Clean monochrome, generous whitespace, high-fashion editorial typography, and minimalist layout.',
-    sampleBrideGroom: 'Kabir & Tarini',
-    sampleVenue: 'The Oberoi Amarvilas, Agra',
-    sampleCeremonies: ['Editorial Welcome Dinner', 'Intimate Sunset Ceremony', 'Black-Tie Cocktail'],
-    borderColor: 'border-neutral-200',
+    icon: BookOpen,
+    badge: 'Vogue Minimalist',
+    bg: 'bg-stone-900',
+    border: 'border-stone-400',
+    accentText: 'text-stone-200',
+    accentBg: 'bg-stone-200',
+    cardBg: 'bg-stone-800',
+    tagline: 'High-Fashion Monochromatic Ivory with Clean Editorial Layout',
   },
-  {
-    id: 'floral-celebration',
+  floral: {
+    id: 'floral',
     name: 'Floral Celebration',
-    tagline: 'Romantic Botanical Garland',
-    badgeEmoji: '🌸',
-    bg: '#FFF8F7',
-    accent: '#065F46',
-    textColor: 'text-rose-950/80',
-    headerColor: 'text-rose-900',
-    desc: 'Soft romantic blush, sage green, delicate marigold and jasmine garlands, and daytime garden warmth.',
-    sampleBrideGroom: 'Rohan & Ananya',
-    sampleVenue: 'Heritage Village Resort, Goa',
-    sampleCeremonies: ['Pastel Haldi & Flower Shower', 'Garden Mehendi Bazaar', 'Beachside Sunset Pheras'],
-    borderColor: 'border-rose-200',
-  },
+    icon: Flower2,
+    badge: 'Soft Romantic',
+    bg: 'bg-[#831843]',
+    border: 'border-pink-300',
+    accentText: 'text-pink-200',
+    accentBg: 'bg-pink-300',
+    cardBg: 'bg-[#701a3c]',
+    tagline: 'Romantic Rose Blush, Sage Botanicals & Intimate Garden Vibe',
+  }
+};
+
+const SAMPLE_EVENTS = [
+  { id: 'mehendi', name: 'Mehendi & Chooda', time: '11:00 AM', venue: 'The Courtyard Lawn', date: 'Dec 18, 2026', dress: 'Sunny Yellow & Mint', invited: true },
+  { id: 'sangeet', name: 'Sangeet & Cocktails', time: '7:30 PM', venue: 'Grand Ballroom', date: 'Dec 18, 2026', dress: 'Glitz & Indo-Western', invited: true },
+  { id: 'haldi', name: 'Haldi & Phoolon Ki Holi', time: '10:00 AM', venue: 'Poolside Pavilion', date: 'Dec 19, 2026', dress: 'Comfortable Yellow', invited: false },
+  { id: 'wedding', name: 'Pheras & Wedding Dinner', time: '6:00 PM', venue: 'Palace Mandap', date: 'Dec 19, 2026', dress: 'Traditional Royal Attire', invited: true },
+  { id: 'reception', name: 'Grand Gala Reception', time: '8:00 PM', venue: 'Imperial Gardens', date: 'Dec 20, 2026', dress: 'Black Tie / Formal Sherwani', invited: true },
 ];
 
 export default function App() {
-  // Navigation & Modals state
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeLeadModal, setActiveLeadModal] = useState(null); // 'couple' | 'planner' | 'founder' | 'demo'
-  const [selectedThemeIndex, setSelectedThemeIndex] = useState(0);
-  const [toastMessage, setToastMessage] = useState(null);
+  const [selectedTheme, setSelectedTheme] = useState('royal');
+  const [showModal, setShowModal] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
 
-  // Plate Calculator State
-  const [guestCount, setGuestCount] = useState(450);
-  const [ceremonyCount, setCeremonyCount] = useState(4);
+  // Interactive RSVP Simulator state
+  const [guestCount, setGuestCount] = useState(2);
+  const [rsvpState, setRsvpState] = useState({
+    mehendi: true,
+    sangeet: true,
+    wedding: true,
+    reception: true,
+  });
+  const [dietary, setDietary] = useState('veg');
+
+  // Budget Calculator state
+  const [totalGuests, setTotalGuests] = useState(450);
   const [plateCost, setPlateCost] = useState(2800);
-  const [uncappedLeakage, setUncappedLeakage] = useState(18); // 18% over-catering without caps
 
-  // Couple Lead Form State
-  const [coupleForm, setCoupleForm] = useState({
-    coupleName: '',
-    partnerName: '',
-    whatsapp: '',
-    city: WEDDING_CITIES[0],
-    weddingDate: '',
-    guestCount: '350 - 500 Guests',
-    themePreference: 'Royal Indian',
-    notes: '',
-  });
+  const themeConfig = THEMES[selectedTheme];
 
-  // Planner Lead Form State
-  const [plannerForm, setPlannerForm] = useState({
-    agencyName: '',
-    contactName: '',
-    workEmail: '',
-    whatsapp: '',
-    annualWeddings: '10 - 25 Weddings / Year',
-    primaryCities: 'Jaipur, Udaipur, Delhi NCR',
-  });
+  // Budget savings calculation
+  const savings = useMemo(() => {
+    // Un-scoped open invites typically result in 15% to 22% untracked guest overruns or unwanted attendees crashing intimate functions
+    const uninvitedPlatesPrevented = Math.round(totalGuests * 0.18);
+    const moneySaved = uninvitedPlatesPrevented * plateCost;
+    return {
+      uninvitedPlatesPrevented,
+      moneySaved
+    };
+  }, [totalGuests, plateCost]);
 
-  // Inline Quick Lead State
-  const [inlineLead, setInlineLead] = useState({
-    name: '',
-    phone: '',
-    city: 'Jaipur, Rajasthan',
-  });
-
-  const [formSubmitting, setFormSubmitting] = useState(false);
-
-  // Toast auto-dismiss
-  useEffect(() => {
-    if (toastMessage) {
-      const timer = setTimeout(() => setToastMessage(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [toastMessage]);
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-  };
-
-  const triggerConfetti = () => {
-    try {
-      confetti({
-        particleCount: 60,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#800020', '#D4AF37', '#059669', '#F59E0B'],
-      });
-    } catch {
-      // Graceful fallback if confetti fails
-    }
-  };
-
-  // Calculator computations
-  const platesSaved = useMemo(() => {
-    const rawSaved = Math.round((guestCount * ceremonyCount * (uncappedLeakage / 100)) * 0.45);
-    return Math.max(25, rawSaved);
-  }, [guestCount, ceremonyCount, uncappedLeakage]);
-
-  const rupeesSaved = useMemo(() => {
-    return platesSaved * plateCost;
-  }, [platesSaved, plateCost]);
-
-  const hoursSaved = useMemo(() => {
-    return Math.round(guestCount * 0.12 + ceremonyCount * 6);
-  }, [guestCount, ceremonyCount]);
-
-  // Lead Submission Handlers via central Formspree endpoint (verified across user's portfolio)
-  const handleCoupleLeadSubmit = async (e) => {
+  const handleRsvpSubmit = (e) => {
     e.preventDefault();
-    setFormSubmitting(true);
-    try {
-      await fetch('https://formspree.io/f/mqkenwgb', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-          project: 'Hinged',
-          formType: 'Couple & Family Early Access',
-          name: coupleForm.coupleName,
-          partner: coupleForm.partnerName,
-          whatsapp: `+91 ${coupleForm.whatsapp}`,
-          destination: coupleForm.city,
-          weddingDate: coupleForm.weddingDate || 'TBD',
-          guestScale: coupleForm.guestCount,
-          themePreference: coupleForm.themePreference,
-          notes: coupleForm.notes,
-          submittedAt: new Date().toISOString(),
-        }),
-      });
-    } catch (err) {
-      console.warn('Lead submit fallback:', err);
-    }
-    setFormSubmitting(false);
-    setActiveLeadModal(null);
-    triggerConfetti();
-    showToast(`🎉 Congratulations ${coupleForm.coupleName}! You are queued for priority Hinged onboarding.`);
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+    setToastMsg('RSVP Confirmed for The Sharma Family! Host dashboard updated in real-time.');
+    setTimeout(() => setToastMsg(''), 5000);
   };
-
-  const handlePlannerLeadSubmit = async (e) => {
-    e.preventDefault();
-    setFormSubmitting(true);
-    try {
-      await fetch('https://formspree.io/f/mqkenwgb', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-          project: 'Hinged',
-          formType: 'Wedding Planner Partnership',
-          agency: plannerForm.agencyName,
-          contact: plannerForm.contactName,
-          email: plannerForm.workEmail,
-          whatsapp: `+91 ${plannerForm.whatsapp}`,
-          annualScale: plannerForm.annualWeddings,
-          operatingRegions: plannerForm.primaryCities,
-          submittedAt: new Date().toISOString(),
-        }),
-      });
-    } catch (err) {
-      console.warn('Planner lead submit fallback:', err);
-    }
-    setFormSubmitting(false);
-    setActiveLeadModal(null);
-    triggerConfetti();
-    showToast(`✅ Partner inquiry logged for ${plannerForm.agencyName}. Our team will contact you within 24 hours.`);
-  };
-
-  const handleInlineQuickLead = async (e) => {
-    e.preventDefault();
-    if (!inlineLead.phone) return;
-    setFormSubmitting(true);
-    try {
-      await fetch('https://formspree.io/f/mqkenwgb', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-          project: 'Hinged',
-          formType: 'Inline Quick Lead',
-          name: inlineLead.name || 'Quick Inquirer',
-          whatsapp: `+91 ${inlineLead.phone}`,
-          city: inlineLead.city,
-          submittedAt: new Date().toISOString(),
-        }),
-      });
-    } catch (err) {
-      console.warn('Inline lead submit fallback:', err);
-    }
-    setFormSubmitting(false);
-    setInlineLead({ name: '', phone: '', city: WEDDING_CITIES[0] });
-    triggerConfetti();
-    showToast('🎉 VIP access link sent to your WhatsApp number!');
-  };
-
-  const selectedTheme = THEMES[selectedThemeIndex];
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#231F20] font-sans selection:bg-[#800020] selection:text-white">
-      {/* Toast Notification Banner */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-[#2A0812] text-amber-50 px-5 py-4 rounded-2xl shadow-2xl border border-[#D4AF37]/50 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
-          <Sparkles className="w-5 h-5 text-[#D4AF37] shrink-0" />
-          <span className="text-xs sm:text-sm font-medium">{toastMessage}</span>
-          <button onClick={() => setToastMessage(null)} className="ml-auto text-amber-200/60 hover:text-white">
-            <X className="w-4 h-4" />
-          </button>
+    <div className="min-h-screen bg-stone-50 text-stone-900 font-sans flex flex-col">
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-50 bg-stone-900 text-white px-5 py-3 rounded-xl shadow-2xl border border-stone-700 flex items-center gap-3 animate-fade-in">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          <span className="text-sm font-medium">{toastMsg}</span>
         </div>
       )}
 
-      {/* Top Announcement Bar */}
-      <div className="bg-[#4A0E17] text-[#FAF7F2] px-4 py-2 text-center text-xs font-medium tracking-wide flex items-center justify-center gap-2 border-b border-[#D4AF37]/20">
-        <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#D4AF37] text-[#2A0812] uppercase tracking-wider">
-          Portfolio Satellite
+      {/* Top Banner */}
+      <div className="bg-[#43141b] text-amber-200 text-xs py-2 px-4 text-center font-medium flex items-center justify-center gap-2 border-b border-[#d4af37]/30">
+        <span className="bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/40 px-2 py-0.5 rounded text-[11px] font-bold">
+          WEDDING TECH OS
         </span>
         <span>
-          Hinged v1.0 Showcase — Open-Source Wedding Coordination for South Asian Celebrations.
+          Built for multi-event Indian and multicultural weddings. No lost RSVPs on WhatsApp.
         </span>
         <button
-          onClick={() => setActiveLeadModal('founder')}
-          className="underline font-bold text-[#D4AF37] hover:text-white cursor-pointer ml-1 inline-flex items-center gap-0.5"
+          onClick={() => setShowModal(true)}
+          className="underline ml-1 font-bold text-white hover:text-amber-200 transition-colors"
         >
-          <span>Meet the Founder</span>
-          <ChevronRight className="w-3 h-3" />
+          Request Host Demo →
         </button>
       </div>
 
-      {/* Sticky Top Navbar */}
-      <header className="sticky top-0 z-40 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#E5DCCF] px-4 sm:px-8 py-3.5 transition-all">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          {/* Brand Logo */}
-          <a href="#" className="flex items-center gap-2.5 group">
-            <div className="h-8.5 w-8.5 rounded-xl bg-[#800020] text-white flex items-center justify-center font-serif font-bold text-lg shadow-sm border border-[#D4AF37]/30 group-hover:scale-105 transition-transform">
-              H
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#722f37] to-[#43141b] flex items-center justify-center text-white text-xl shadow-md">
+              💍
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-serif font-bold text-xl tracking-tight text-[#231F20]">
-                HINGED
-              </span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[#800020]/10 text-[#800020] uppercase">
-                Satellite
-              </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-serif font-bold text-2xl tracking-tight text-stone-950">Hinged</span>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-50 text-[#722f37] border border-rose-200">
+                  Open Source
+                </span>
+              </div>
+              <p className="text-[11px] text-stone-500 font-medium -mt-0.5 hidden sm:block">One link for your wedding.</p>
             </div>
-          </a>
+          </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-gray-700">
-            <a href="#features" className="hover:text-[#800020] transition-colors">
-              Why Hinged
-            </a>
-            <a href="#themes" className="hover:text-[#800020] transition-colors">
-              3 Themes
-            </a>
-            <a href="#calculator" className="hover:text-[#800020] transition-colors">
-              Plate Calculator
-            </a>
-            <a href="#planners" className="hover:text-[#800020] transition-colors">
-              Planners
-            </a>
-            <a href="#comparison" className="hover:text-[#800020] transition-colors">
-              Compare
-            </a>
-            <a href="#faqs" className="hover:text-[#800020] transition-colors">
-              FAQs
-            </a>
+          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-stone-600">
+            <a href="#themes" className="hover:text-stone-950 transition-colors">3 Luxury Themes</a>
+            <a href="#rsvp-sim" className="hover:text-stone-950 transition-colors">Scoped RSVP Demo</a>
+            <a href="#savings" className="hover:text-stone-950 transition-colors">Catering Calculator</a>
+            <a href="#features" className="hover:text-stone-950 transition-colors">Coordinator Console</a>
           </nav>
 
-          {/* CTAs */}
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => setActiveLeadModal('demo')}
-              className="text-xs font-semibold text-gray-800 hover:text-[#800020] px-3 py-2 cursor-pointer flex items-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>Jaipur Demo</span>
-            </button>
-
-            <button
-              onClick={() => setActiveLeadModal('founder')}
-              className="text-xs font-semibold text-gray-800 hover:text-[#800020] px-3 py-2 cursor-pointer hidden lg:inline-flex items-center gap-1"
-            >
-              <Users className="w-3.5 h-3.5 text-gray-500" />
-              <span>Founder</span>
-            </button>
-
-            <button
-              onClick={() => setActiveLeadModal('couple')}
-              className="px-4 py-2 rounded-xl bg-[#800020] hover:bg-[#660019] text-white text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer group"
+              onClick={() => setShowModal(true)}
+              className="bg-[#722f37] hover:bg-[#581c24] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md shadow-[#722f37]/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <span>Get Early Access</span>
-              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-gray-700 hover:text-black cursor-pointer"
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
         </div>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="md:hidden pt-4 pb-3 px-4 border-t border-gray-200 mt-3 space-y-2 bg-[#FAF7F2]">
-            <a
-              href="#features"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-gray-800"
-            >
-              Why Hinged
-            </a>
-            <a
-              href="#themes"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-gray-800"
-            >
-              3 Themes
-            </a>
-            <a
-              href="#calculator"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-gray-800"
-            >
-              Plate Calculator
-            </a>
-            <a
-              href="#planners"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-gray-800"
-            >
-              Planners
-            </a>
-            <div className="pt-3 border-t border-gray-200 flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setActiveLeadModal('demo');
-                }}
-                className="w-full py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-gray-800 bg-white"
-              >
-                Explore Jaipur Demo
-              </button>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setActiveLeadModal('couple');
-                }}
-                className="w-full py-2.5 rounded-xl bg-[#800020] text-xs font-bold text-white shadow-sm"
-              >
-                Request Early Access
-              </button>
-            </div>
-          </div>
-        )}
       </header>
 
-      {/* HERO SECTION */}
-      <section className="px-4 pt-16 sm:pt-24 pb-16 text-center max-w-4xl mx-auto relative">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#800020]/5 border border-[#800020]/20 text-[#800020] text-xs font-semibold mb-6 shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 text-[#D97706]" />
-          <span>The WhatsApp-First Wedding Coordination Hub</span>
-        </div>
-
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold text-[#231F20] tracking-tight leading-[1.1] mb-6">
-          One link for your wedding.
-          <br />
-          <span className="italic font-normal text-[#800020]">Every guest, every ceremony.</span>
-        </h1>
-
-        <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8">
-          Replace the chaos of scattered WhatsApp messages, broken Excel spreadsheets, and frantic phone calls. Hinged gives your wedding a shared digital home designed specifically for multi-day Indian celebrations.
-        </p>
-
-        {/* Primary CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto">
-          <button
-            onClick={() => setActiveLeadModal('couple')}
-            className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#800020] hover:bg-[#660019] text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer group"
-          >
-            <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-            <span>Request Early Access</span>
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-
-          <button
-            onClick={() => setActiveLeadModal('demo')}
-            className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 font-bold text-sm shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-          >
-            <span>Explore Live Demo (Jaipur)</span>
-            <ArrowRight className="w-4 h-4 text-gray-500" />
-          </button>
-        </div>
-
-        {/* Trust Proof Points */}
-        <div className="flex flex-wrap items-center justify-center gap-6 mt-10 text-xs text-gray-600 font-medium">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            Zero guest login required
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            Strict household attendee caps
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            Free &amp; Open Source (MIT)
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            100% WhatsApp Native
-          </span>
-        </div>
-      </section>
-
-      {/* INTERACTIVE DEMO SHOWCASE CALLOUT */}
-      <section className="px-4 py-8 max-w-5xl mx-auto">
-        <div className="rounded-3xl bg-linear-to-r from-[#2A0812] to-[#4A0E17] text-white p-6 sm:p-8 shadow-xl border border-[#D4AF37]/30 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 text-center md:text-left">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">
-              <MapPin className="w-3.5 h-3.5" />
-              <span>Jaipur Celebration Spotlight</span>
-            </div>
-            <h3 className="text-2xl font-serif font-bold text-amber-100">
-              Aarav &amp; Meera — Live Multi-Event Wedding
-            </h3>
-            <p className="text-xs sm:text-sm text-amber-50/80 max-w-xl leading-relaxed">
-              Experience the full coordinator flow: 5 ceremonies (Mehendi, Haldi, Sangeet, Pheras, Reception), 350+ guests, tokenized VIP invites, and live food preference tracking.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full md:w-auto">
-            <button
-              onClick={() => setActiveLeadModal('demo')}
-              className="w-full sm:w-auto px-5 py-3 rounded-xl bg-[#D4AF37] hover:bg-[#FBBF24] text-[#2A0812] font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Unbox Live Demo</span>
-            </button>
-            <a
-              href="https://github.com/Wedding-Tribe/hinged"
-              target="_blank"
-              rel="noreferrer"
-              className="w-full sm:w-auto px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Github className="w-4 h-4" />
-              <span>View Code</span>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* CORE VALUE PILLARS (THE INDIAN WEDDING REALITY) */}
-      <section id="features" className="px-4 py-16 max-w-6xl mx-auto border-t border-[#E5DCCF]">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs uppercase tracking-widest text-[#800020] font-bold">
-            Built for Indian Celebrations
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#231F20] mt-1.5">
-            Why Standard Wedding Websites Fail in South Asia
-          </h2>
-          <p className="text-xs sm:text-sm text-gray-600 mt-2.5 leading-relaxed">
-            Indian weddings are not single events. They are multi-event community gatherings with complex family logistics, shifting guest lists, and strict catering budgets.
-          </p>
-        </div>
-
-        {/* 3 Core Pillar Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 sm:p-7 rounded-3xl bg-white border border-[#E5DCCF] shadow-xs hover:shadow-lg transition-all space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#800020]/10 text-[#800020] flex items-center justify-center font-bold">
-              <Calendar className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-serif font-bold text-[#231F20]">
-              Multi-Event Permission Matrix
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Invite 80 people to Haldi, 300 to Sangeet, and 700 to the Reception. Tokenized private links guarantee guests only see the ceremonies they are invited to. No snooping, zero family politics.
-            </p>
-            <div className="pt-2 flex items-center text-xs font-semibold text-[#800020] gap-1">
-              <span>Tokenized scoped links</span>
-              <CheckCircle2 className="w-3.5 h-3.5" />
-            </div>
-          </div>
-
-          <div className="p-6 sm:p-7 rounded-3xl bg-white border border-[#E5DCCF] shadow-xs hover:shadow-lg transition-all space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-              <MessageCircle className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-serif font-bold text-[#231F20]">
-              WhatsApp-Native Workflows
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Guests do not check email or create passwords for family weddings. Hinged delivers one-click WhatsApp invitations with prefilled personalized links and instant RSVP submission in 30 seconds.
-            </p>
-            <div className="pt-2 flex items-center text-xs font-semibold text-emerald-700 gap-1">
-              <span>95%+ open &amp; response rates</span>
-              <CheckCircle2 className="w-3.5 h-3.5" />
-            </div>
-          </div>
-
-          <div className="p-6 sm:p-7 rounded-3xl bg-white border border-[#E5DCCF] shadow-xs hover:shadow-lg transition-all space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-              <Users className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-serif font-bold text-[#231F20]">
-              Household Attendee Caps
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Address invitations to &ldquo;The Sharma Family&rdquo; while enforcing a strict maximum of 3 seats per ceremony. Protect your catering plate budget from unexpected +4 surprises.
-            </p>
-            <div className="pt-2 flex items-center text-xs font-semibold text-amber-700 gap-1">
-              <span>Guaranteed plate security</span>
-              <CheckCircle2 className="w-3.5 h-3.5" />
-            </div>
-          </div>
-        </div>
-
-        {/* 3 Secondary Operational Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#E5DCCF] space-y-2">
-            <div className="flex items-center gap-2 font-serif font-bold text-base text-gray-900">
-              <Utensils className="w-4 h-4 text-[#800020]" />
-              <h4>Dietary &amp; Food Restrictions Radar</h4>
-            </div>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Caterers receive clean counts for Jain (no onion/garlic/root), Pure Vegetarian, Swaminarayan, and Vegan guests per function.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#E5DCCF] space-y-2">
-            <div className="flex items-center gap-2 font-serif font-bold text-base text-gray-900">
-              <Hotel className="w-4 h-4 text-[#800020]" />
-              <h4>Travel, Shuttles &amp; Room Allocations</h4>
-            </div>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Guests view hotel check-in desks, airport pick-up shuttle rosters, and hospitality desk WhatsApp contacts in one mobile tab.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#E5DCCF] space-y-2">
-            <div className="flex items-center gap-2 font-serif font-bold text-base text-gray-900">
-              <Send className="w-4 h-4 text-[#800020]" />
-              <h4>One-Click Broadcast Messages</h4>
-            </div>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Send emergency schedule shifts (&ldquo;Baraat will assemble at 5:30 PM at the Main Porch&rdquo;) via formatted WhatsApp links without messy group chats.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* INTERACTIVE 3-THEME SWITCHER & LIVE PREVIEWER */}
-      <section id="themes" className="px-4 py-16 bg-[#F5EFEB]/70 border-y border-[#E5DCCF]">
-        <div className="max-w-6xl mx-auto space-y-8">
-          <div className="text-center max-w-xl mx-auto space-y-2">
-            <span className="text-xs uppercase tracking-widest text-[#800020] font-bold">
-              Stationery &amp; Aesthetics
-            </span>
-            <h2 className="text-3xl font-serif font-bold text-[#231F20]">
-              3 Distinct Culturally Refined Themes
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-600">
-              Every wedding has its own soul. Switch themes with a single click and experience how your digital cards adapt in real time.
-            </p>
-          </div>
-
-          {/* Theme Selector Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {THEMES.map((t, idx) => (
-              <button
-                key={t.id}
-                onClick={() => setSelectedThemeIndex(idx)}
-                className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  selectedThemeIndex === idx
-                    ? 'bg-[#800020] text-white shadow-md scale-105'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                <span>{t.badgeEmoji}</span>
-                <span>{t.name}</span>
-                {selectedThemeIndex === idx && <Check className="w-3.5 h-3.5 text-[#D4AF37]" />}
-              </button>
-            ))}
-          </div>
-
-          {/* Interactive Live Card Preview */}
-          <div className="max-w-3xl mx-auto">
-            <div
-              className={`p-8 sm:p-10 rounded-3xl shadow-2xl border transition-all duration-300 relative overflow-hidden ${selectedTheme.borderColor}`}
-              style={{ backgroundColor: selectedTheme.bg }}
-            >
-              {/* Decorative Corner Ornaments */}
-              <div className="absolute top-4 left-4 text-xs opacity-40 font-mono tracking-widest text-amber-500">
-                ✦ DIGITAL STATIONERY
-              </div>
-              <div className="absolute top-4 right-4 text-xs font-bold px-2 py-0.5 rounded-full bg-white/20 text-current">
-                {selectedTheme.tagline}
+      {/* Hero Section */}
+      <section className="relative overflow-hidden pt-12 pb-16 lg:pt-20 lg:pb-24 bg-gradient-to-b from-rose-50/50 via-stone-50 to-stone-100 border-b border-stone-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            {/* Left Hero Text */}
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-100 border border-rose-300 text-[#722f37] text-xs font-bold mb-6">
+                <Sparkles className="w-4 h-4 text-[#722f37]" />
+                <span>Mobile-First WhatsApp Wedding Coordination</span>
               </div>
 
-              <div className="text-center space-y-4 pt-4">
-                <span className="text-4xl">{selectedTheme.badgeEmoji}</span>
-                <div className="space-y-1">
-                  <span className="text-xs tracking-widest uppercase font-semibold opacity-70">
-                    Cordially Invite You To Celebrate
-                  </span>
-                  <h3 className={`text-3xl sm:text-4xl font-serif font-bold ${selectedTheme.headerColor}`}>
-                    {selectedTheme.sampleBrideGroom}
-                  </h3>
-                  <p className="text-xs font-serif italic opacity-80">
-                    {selectedTheme.sampleVenue}
-                  </p>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-extrabold text-stone-950 tracking-tight leading-[1.15] mb-6">
+                One link for your wedding. <br />
+                <span className="text-[#722f37] italic">
+                  Every guest, function &amp; detail.
+                </span>
+              </h1>
+
+              <p className="text-base sm:text-lg text-stone-700 leading-relaxed mb-8 max-w-2xl">
+                Indian and multicultural weddings aren't single events—they're 3-to-5-day celebrations across 4 to 7 ceremonies.
+                Hinged gives every family member a <strong>scoped digital invitation link</strong> resolving strictly to the events they are invited to.
+                Zero app installs, zero passwords, and zero spreadsheet chaos.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-4 mb-10">
+                <a
+                  href="#rsvp-sim"
+                  className="bg-stone-950 hover:bg-stone-800 text-white font-bold text-sm px-6 py-3.5 rounded-xl shadow-xl shadow-stone-950/15 active:scale-95 transition-all flex items-center gap-2"
+                >
+                  <span>Test Live RSVP Demo</span>
+                  <ChevronDown className="w-4 h-4" />
+                </a>
+
+                <a
+                  href="#themes"
+                  className="bg-white hover:bg-stone-100 text-stone-900 font-bold text-sm px-6 py-3.5 rounded-xl border border-stone-300 shadow-sm active:scale-95 transition-all flex items-center gap-2"
+                >
+                  <Crown className="w-4 h-4 text-[#722f37]" />
+                  <span>Preview 3 Cultural Themes</span>
+                </a>
+              </div>
+
+              {/* Trust Badges */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-stone-300">
+                <div className="flex items-start gap-2.5">
+                  <ShieldCheck className="w-5 h-5 text-[#722f37] shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-stone-950 uppercase">Scoped Invites</h4>
+                    <p className="text-[11px] text-stone-500">No relatives snooping</p>
+                  </div>
                 </div>
 
-                <p className={`text-xs sm:text-sm max-w-md mx-auto leading-relaxed ${selectedTheme.textColor}`}>
-                  {selectedTheme.desc}
-                </p>
+                <div className="flex items-start gap-2.5">
+                  <MessageCircle className="w-5 h-5 text-[#722f37] shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-stone-950 uppercase">WhatsApp Native</h4>
+                    <p className="text-[11px] text-stone-500">1-click direct link sharing</p>
+                  </div>
+                </div>
 
-                {/* Simulated Function Pill Badges */}
-                <div className="pt-4 flex flex-wrap items-center justify-center gap-2">
-                  {selectedTheme.sampleCeremonies.map((c, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 rounded-full text-[11px] font-semibold bg-white/15 backdrop-blur-xs border border-white/20"
-                    >
-                      {c}
+                <div className="flex items-start gap-2.5">
+                  <Users className="w-5 h-5 text-[#722f37] shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-stone-950 uppercase">Headcount Caps</h4>
+                    <p className="text-[11px] text-stone-500">Strict attendee limits</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <FileSpreadsheet className="w-5 h-5 text-[#722f37] shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-stone-950 uppercase">CSV Pipeline</h4>
+                    <p className="text-[11px] text-stone-500">Smart phone &amp; error detector</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Mobile Phone Mockup */}
+            <div className="lg:col-span-5 flex justify-center">
+              <div className="w-full max-w-[340px] bg-stone-950 rounded-[40px] p-3 shadow-2xl border-4 border-stone-800 relative">
+                {/* Speaker Notch */}
+                <div className="w-32 h-4 bg-stone-900 rounded-full mx-auto mb-3 flex items-center justify-center">
+                  <div className="w-12 h-1.5 bg-stone-700 rounded-full"></div>
+                </div>
+
+                {/* Inner Screen */}
+                <div className={`rounded-[30px] p-5 text-white ${themeConfig.bg} border-2 ${themeConfig.border} transition-colors duration-500`}>
+                  <div className="text-center pb-4 border-b border-white/20">
+                    <span className="text-[10px] uppercase font-mono tracking-widest text-amber-200">The Wedding Celebration</span>
+                    <h2 className="font-serif text-2xl font-bold mt-1 text-white">Aarav &amp; Meera</h2>
+                    <p className="text-xs text-white/80 mt-0.5">December 18–20, 2026 · Jaipur, Rajasthan</p>
+                    <div className="mt-3 inline-block bg-black/30 px-3 py-1 rounded-full text-[11px] font-mono border border-white/20">
+                      ⏳ 48 Days to Pheras
+                    </div>
+                  </div>
+
+                  {/* Scoped Badge */}
+                  <div className="my-3 bg-black/40 rounded-xl p-2.5 text-xs border border-white/20">
+                    <div className="text-[11px] text-amber-200 font-semibold flex items-center justify-between">
+                      <span>Personal Invite for:</span>
+                      <span className="font-mono bg-white/20 px-1.5 py-0.2 rounded text-[10px]">Max 2 Guests</span>
+                    </div>
+                    <div className="font-bold text-white text-sm mt-0.5">The Sharma Family</div>
+                  </div>
+
+                  {/* Function List */}
+                  <div className="space-y-2 mt-2">
+                    <span className="text-[10px] uppercase font-mono tracking-wider text-white/70 block">
+                      Your Ceremonies (4 Scoped)
                     </span>
-                  ))}
-                </div>
+                    {SAMPLE_EVENTS.filter(e => e.invited).slice(0, 3).map(ev => (
+                      <div key={ev.id} className="bg-black/30 rounded-xl p-2 text-xs border border-white/10 flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-white text-xs">{ev.name}</div>
+                          <div className="text-[10px] text-white/70 flex items-center gap-1 mt-0.5">
+                            <Clock className="w-3 h-3 text-amber-200" />
+                            <span>{ev.time} · {ev.date.split(',')[0]}</span>
+                          </div>
+                        </div>
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      </div>
+                    ))}
+                  </div>
 
-                {/* Interactive Simulated RSVP Action */}
-                <div className="pt-6 flex items-center justify-center gap-3">
-                  <button
-                    onClick={() => setActiveLeadModal('couple')}
-                    className="px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#FBBF24] text-[#2A0812] text-xs font-bold shadow-md transition-all cursor-pointer flex items-center gap-1.5"
-                  >
-                    <span>Adopt This Theme for Your Wedding</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="mt-4 pt-3 border-t border-white/20 text-center">
+                    <div className="text-[10px] text-white/70">Invited via WhatsApp · Scoped Token Protected</div>
+                  </div>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </section>
 
-      {/* INTERACTIVE CATERING PLATE & BUDGET SAVER CALCULATOR */}
-      <section id="calculator" className="px-4 py-16 max-w-6xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs uppercase tracking-widest text-[#800020] font-bold">
-            Interactive ROI Simulator
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#231F20] mt-1.5">
-            Catering Plate &amp; Budget Saver Calculator
-          </h2>
-          <p className="text-xs sm:text-sm text-gray-600 mt-2.5 leading-relaxed">
-            In Indian weddings, over-catering due to ambiguous WhatsApp plus-ones costs families ₹2,00,000 to ₹8,00,000+ in wasted food plates. See how much Hinged saves your wedding budget.
-          </p>
-        </div>
+      {/* Theme Switcher Section */}
+      <section id="themes" className="py-20 bg-white border-b border-stone-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#722f37] bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+              Visual Design Engineering
+            </span>
+            <h2 className="text-3xl font-serif font-extrabold text-stone-950 mt-3">
+              3 Culturally Refined Luxury Themes
+            </h2>
+            <p className="text-sm text-stone-600 mt-2">
+              Every celebration has its own soul. Switch themes with one click in the host dashboard without changing any guest data.
+            </p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          {/* Controls Panel */}
-          <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-[#E5DCCF] shadow-sm space-y-6">
-            {/* Slider 1: Expected Guests */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold text-gray-800">
-                <span>Total Invited Guests:</span>
-                <span className="text-[#800020] font-mono text-sm">{guestCount} Guests</span>
-              </div>
-              <input
-                type="range"
-                min="150"
-                max="1200"
-                step="25"
-                value={guestCount}
-                onChange={(e) => setGuestCount(Number(e.target.value))}
-                className="w-full accent-[#800020] cursor-pointer"
-              />
-              <div className="flex justify-between text-[10px] text-gray-500 font-medium">
-                <span>150 (Intimate)</span>
-                <span>500 (Standard)</span>
-                <span>1200+ (Grand Gala)</span>
-              </div>
-            </div>
-
-            {/* Selector: Ceremonies */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold text-gray-800">
-                <span>Number of Catered Ceremonies:</span>
-                <span className="text-[#800020] font-mono text-sm">{ceremonyCount} Functions</span>
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {[2, 3, 4, 5].map((count) => (
+            {/* Theme Selector Buttons */}
+            <div className="flex flex-wrap justify-center gap-3 mt-6">
+              {Object.values(THEMES).map(t => {
+                const IconComponent = t.icon;
+                const isSelected = selectedTheme === t.id;
+                return (
                   <button
-                    key={count}
-                    onClick={() => setCeremonyCount(count)}
-                    className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      ceremonyCount === count
-                        ? 'bg-[#800020] text-white shadow-xs'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    key={t.id}
+                    onClick={() => setSelectedTheme(t.id)}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#722f37] text-white border-[#722f37] shadow-md'
+                        : 'bg-stone-50 text-stone-700 border-stone-300 hover:bg-stone-100'
                     }`}
                   >
-                    {count} Events
+                    <IconComponent className="w-4 h-4" />
+                    <span>{t.name}</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/20 text-white">
+                      {t.badge}
+                    </span>
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Slider 2: Plate Cost */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold text-gray-800">
-                <span>Average Catering Plate Cost:</span>
-                <span className="text-[#800020] font-mono text-sm">₹{plateCost.toLocaleString('en-IN')} / Plate</span>
-              </div>
-              <input
-                type="range"
-                min="1500"
-                max="4500"
-                step="100"
-                value={plateCost}
-                onChange={(e) => setPlateCost(Number(e.target.value))}
-                className="w-full accent-[#800020] cursor-pointer"
-              />
-              <div className="flex justify-between text-[10px] text-gray-500 font-medium">
-                <span>₹1,500 (Tier 2/3 City)</span>
-                <span>₹2,800 (Palace/Resort)</span>
-                <span>₹4,500 (5-Star Luxury)</span>
-              </div>
-            </div>
-
-            {/* Slider 3: Uncapped Attendance Overrun */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-bold text-gray-800">
-                <span>Estimated Uncapped Plus-One Overrun:</span>
-                <span className="text-amber-800 font-mono text-sm">{uncappedLeakage}% Surplus</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="25"
-                step="1"
-                value={uncappedLeakage}
-                onChange={(e) => setUncappedLeakage(Number(e.target.value))}
-                className="w-full accent-[#800020] cursor-pointer"
-              />
-              <p className="text-[11px] text-gray-500">
-                Without strict household caps, extended families typically bring unexpected plus-ones or confirm late, forcing hosts to over-order plates.
-              </p>
+                );
+              })}
             </div>
           </div>
 
-          {/* Results Display */}
-          <div className="lg:col-span-5 bg-[#2A0812] text-white rounded-3xl p-6 sm:p-8 border border-[#D4AF37]/40 shadow-xl space-y-6">
-            <div className="space-y-1">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-[#D4AF37]">
-                Projected Savings Summary
-              </span>
-              <h3 className="text-2xl font-serif font-bold text-amber-100">
-                Budget &amp; Food Reclaimed
-              </h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-white/10 border border-white/15">
-                <span className="text-[11px] text-amber-200/80 font-medium block">
-                  Direct Catering Rupees Saved:
-                </span>
-                <div className="text-3xl sm:text-4xl font-serif font-bold text-[#D4AF37] mt-1">
-                  ₹{rupeesSaved.toLocaleString('en-IN')}
-                </div>
-                <span className="text-[10px] text-amber-100/60 mt-0.5 block">
-                  Calculated against {platesSaved} wasted over-ordered plates.
+          {/* Theme Feature Display */}
+          <div className={`p-8 rounded-3xl border-2 ${themeConfig.border} ${themeConfig.cardBg} text-white transition-all shadow-xl max-w-4xl mx-auto`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/20 pb-4 mb-6">
+              <div>
+                <span className="text-xs font-mono uppercase tracking-widest text-amber-200">{themeConfig.badge} Aesthetics</span>
+                <h3 className="font-serif text-2xl font-bold mt-1 text-white">{themeConfig.name}</h3>
+                <p className="text-xs text-white/80 mt-1">{themeConfig.tagline}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono px-3 py-1 rounded-full bg-white/10 border border-white/20">
+                  Custom Typography &amp; CSS Tokens
                 </span>
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
-                  <span className="text-[10px] text-amber-200/70 block">Plates Saved</span>
-                  <div className="text-xl font-bold text-white mt-0.5">{platesSaved}</div>
-                  <span className="text-[10px] text-amber-100/50">Zero food wasted</span>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
-                  <span className="text-[10px] text-amber-200/70 block">Coordination Time</span>
-                  <div className="text-xl font-bold text-white mt-0.5">~{hoursSaved} hrs</div>
-                  <span className="text-[10px] text-amber-100/50">Follow-up calls saved</span>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                <span className="font-bold text-white block mb-1">Color Palette</span>
+                <p className="text-white/70">High-contrast background with balanced accents designed for sunlight legibility.</p>
+              </div>
+              <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                <span className="font-bold text-white block mb-1">Typography Pairing</span>
+                <p className="text-white/70">Custom serif headlines paired with ultra-legible sans-serif details for senior relatives.</p>
+              </div>
+              <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                <span className="font-bold text-white block mb-1">Ornamental Elements</span>
+                <p className="text-white/70">Subtle border filigrees, mandap patterns, and micro-animations on interactive RSVP buttons.</p>
               </div>
             </div>
-
-            <button
-              onClick={() => setActiveLeadModal('couple')}
-              className="w-full py-3.5 rounded-xl bg-[#D4AF37] hover:bg-[#FBBF24] text-[#2A0812] font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Lock In These Savings — Create Wedding</span>
-            </button>
           </div>
         </div>
       </section>
 
-      {/* WEDDING PLANNERS & AGENCIES PARTNERSHIP SECTION */}
-      <section id="planners" className="px-4 py-16 bg-[#FAF7F2] border-t border-[#E5DCCF]">
-        <div className="max-w-5xl mx-auto rounded-3xl bg-linear-to-br from-white to-[#F5EFEB] border border-[#E5DCCF] p-8 sm:p-12 shadow-sm space-y-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-xl">
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#800020]/10 text-[#800020] border border-[#800020]/20 inline-block">
-                For Wedding Planners &amp; Event Agencies
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-gray-900">
-                Deliver Luxury White-Glove Coordination to Your Couples
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Whether you manage 5 boutique weddings in Udaipur or 30 high-scale destination galas across India and the UAE, Hinged provides multi-wedding workspaces, custom domain routing, and real-time vendor exports.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setActiveLeadModal('planner')}
-              className="px-6 py-3.5 rounded-xl bg-[#800020] hover:bg-[#660019] text-white text-xs font-bold shadow-md transition-all shrink-0 cursor-pointer flex items-center gap-2"
-            >
-              <span>Partner as a Wedding Planner</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
-            <div className="space-y-1">
-              <h4 className="font-bold text-xs text-gray-900">Multi-Wedding Agency Console</h4>
-              <p className="text-[11px] text-gray-600">Switch between active couple workspaces with role-based staff permissions.</p>
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-bold text-xs text-gray-900">Branded Custom Domains</h4>
-              <p className="text-[11px] text-gray-600">Deliver invitations on your agency domain or couple custom URLs.</p>
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-bold text-xs text-gray-900">One-Click Caterer CSVs</h4>
-              <p className="text-[11px] text-gray-600">Export clean headcounts filtered by dietary restrictions for banquet managers.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* COMPARISON TABLE */}
-      <section id="comparison" className="px-4 py-16 max-w-6xl mx-auto border-t border-[#E5DCCF]">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs uppercase tracking-widest text-[#800020] font-bold">
-            Transparent Benchmarking
-          </span>
-          <h2 className="text-3xl font-serif font-bold text-[#231F20] mt-1.5">
-            How Hinged Compares to Generic Tools
-          </h2>
-          <p className="text-xs sm:text-sm text-gray-600 mt-2">
-            Why leading couples and planners choose Hinged over generic website builders.
-          </p>
-        </div>
-
-        <div className="overflow-x-auto rounded-2xl border border-[#E5DCCF] bg-white shadow-xs">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-[#FAF7F2] border-b border-[#E5DCCF] text-gray-700">
-                <th className="p-4 font-bold">Key Coordination Capability</th>
-                <th className="p-4 font-bold text-[#800020] bg-[#800020]/5">Hinged (WhatsApp-First)</th>
-                <th className="p-4 font-bold">The Knot / Zola (US-Centric)</th>
-                <th className="p-4 font-bold">WedMeGood (Vendor Portal)</th>
-                <th className="p-4 font-bold">Excel + WhatsApp Chats</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5DCCF]">
-              <tr>
-                <td className="p-4 font-semibold text-gray-900">Multi-Day Indian Ceremony Matrix</td>
-                <td className="p-4 font-bold text-emerald-700 bg-[#800020]/5">✓ Native (Unlimited Events)</td>
-                <td className="p-4 text-gray-500">△ Clunky sub-events</td>
-                <td className="p-4 text-gray-500">✗ Vendor discovery only</td>
-                <td className="p-4 text-red-600">✗ VLOOKUP breakdown</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-semibold text-gray-900">Tokenized Scoped Guest Visibility</td>
-                <td className="p-4 font-bold text-emerald-700 bg-[#800020]/5">✓ Guests only see invited events</td>
-                <td className="p-4 text-red-600">✗ All ceremonies public</td>
-                <td className="p-4 text-gray-400">—</td>
-                <td className="p-4 text-gray-400">—</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-semibold text-gray-900">Zero Guest Login / App Install</td>
-                <td className="p-4 font-bold text-emerald-700 bg-[#800020]/5">✓ 1-Click WhatsApp Direct</td>
-                <td className="p-4 text-red-600">✗ Forces email registration</td>
-                <td className="p-4 text-red-600">✗ App download required</td>
-                <td className="p-4 text-emerald-700">✓ Native chat</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-semibold text-gray-900">Strict Household Attendee Caps</td>
-                <td className="p-4 font-bold text-emerald-700 bg-[#800020]/5">✓ Enforced plate security</td>
-                <td className="p-4 text-gray-500">△ Loose plus-ones</td>
-                <td className="p-4 text-gray-400">—</td>
-                <td className="p-4 text-red-600">✗ +4 surprise plates</td>
-              </tr>
-              <tr>
-                <td className="p-4 font-semibold text-gray-900">Open-Source &amp; Self-Hostable</td>
-                <td className="p-4 font-bold text-emerald-700 bg-[#800020]/5">✓ MIT License (Free forever)</td>
-                <td className="p-4 text-red-600">✗ Proprietary SaaS</td>
-                <td className="p-4 text-red-600">✗ Ad-supported portal</td>
-                <td className="p-4 text-gray-400">—</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* FREQUENTLY ASKED QUESTIONS */}
-      <section id="faqs" className="px-4 py-16 max-w-4xl mx-auto border-t border-[#E5DCCF]">
-        <div className="text-center max-w-xl mx-auto mb-10">
-          <span className="text-xs uppercase tracking-widest text-[#800020] font-bold">
-            Got Questions?
-          </span>
-          <h2 className="text-3xl font-serif font-bold text-[#231F20] mt-1.5">
-            Frequently Asked Questions
-          </h2>
-        </div>
-
-        <div className="space-y-3">
-          {[
-            {
-              q: 'Do guests need to install an app or create an account to RSVP?',
-              a: 'No. Guests receive a single personalized link via WhatsApp. When they tap it, their personalized schedule opens instantly in their mobile browser with pre-filled household names. They submit RSVPs in 30 seconds without creating any passwords or downloading any apps.',
-            },
-            {
-              q: 'How does Hinged prevent relatives from seeing events they are not invited to?',
-              a: 'Hinged uses cryptographically secure tokenized links. When "The Sharma Family" opens their link, the system looks up their specific permissions in the permission matrix and renders only the functions (e.g. Sangeet & Reception) they are invited to. Haldi or intimate family poojas remain invisible.',
-            },
-            {
-              q: 'Can I import my existing guest list from an Excel or Google Sheets spreadsheet?',
-              a: 'Yes! Hinged includes a real CSV importer with column mapping, Indian phone number (+91) auto-detection, duplicate identification, and family side tags (Bride vs Groom).',
-            },
-            {
-              q: 'Is Hinged really free and open source?',
-              a: 'Yes. Hinged is distributed under the MIT License on GitHub. You can self-host it on Vercel, Supabase, or Docker, or use our hosted concierge service for turnkey setup.',
-            },
-            {
-              q: 'Can wedding planners manage multiple weddings on Hinged?',
-              a: 'Absolutely. We offer dedicated agency workspaces where planners can coordinate multiple weddings, invite team members, export vendor CSV reports, and use custom client domains.',
-            },
-          ].map((faq, idx) => (
-            <details
-              key={idx}
-              className="group p-5 rounded-2xl bg-white border border-[#E5DCCF] transition-all"
-            >
-              <summary className="flex items-center justify-between font-serif font-bold text-sm text-gray-900 cursor-pointer list-none">
-                <span>{faq.q}</span>
-                <ChevronDown className="w-4 h-4 text-gray-500 group-open:rotate-180 transition-transform" />
-              </summary>
-              <p className="text-xs text-gray-600 mt-3 leading-relaxed border-t border-gray-100 pt-3">
-                {faq.a}
-              </p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      {/* HIGH-CONVERTING INLINE LEAD SECTION (BOTTOM BANNER) */}
-      <section className="px-4 py-16 max-w-5xl mx-auto">
-        <div className="rounded-3xl bg-linear-to-br from-[#2A0812] via-[#4A0E17] to-[#2A0812] text-white p-8 sm:p-12 shadow-2xl border border-[#D4AF37]/40 text-center relative overflow-hidden">
-          <div className="max-w-2xl mx-auto space-y-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Priority Access for 2026-2027 Weddings</span>
+      {/* Interactive RSVP Simulator */}
+      <section id="rsvp-sim" className="py-20 bg-stone-100 border-b border-stone-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#722f37] bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+              Interactive Tool 01
             </span>
-
-            <h2 className="text-3xl sm:text-5xl font-serif font-bold text-amber-100 leading-tight">
-              Plan Your Dream Celebration Without the Chaos
+            <h2 className="text-3xl font-serif font-extrabold text-stone-950 mt-3">
+              Test the Scoped RSVP Experience
             </h2>
-
-            <p className="text-xs sm:text-sm text-amber-50/80 leading-relaxed max-w-lg mx-auto">
-              Join 250+ couples and luxury wedding planners coordinating stress-free Indian weddings with Hinged.
+            <p className="text-sm text-stone-600 mt-2">
+              Experience what your guests see on their phones. Notice how Haldi is hidden because this household is only invited to 4 functions.
             </p>
+          </div>
 
-            {/* Inline Quick Lead Form */}
-            <form onSubmit={handleInlineQuickLead} className="pt-4 max-w-xl mx-auto space-y-3">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  required
-                  placeholder="Your Name (e.g. Ananya)"
-                  value={inlineLead.name}
-                  onChange={(e) => setInlineLead({ ...inlineLead, name: e.target.value })}
-                  className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-amber-200/50 text-xs focus:outline-none focus:border-[#D4AF37] shadow-inner"
-                />
-                <div className="flex flex-1">
-                  <span className="inline-flex items-center px-3 text-xs font-bold bg-white/20 border border-r-0 border-white/20 rounded-l-xl text-amber-200 font-mono">
-                    +91
-                  </span>
-                  <input
-                    type="tel"
-                    required
-                    pattern="[0-9]{10}"
-                    placeholder="WhatsApp Number"
-                    value={inlineLead.phone}
-                    onChange={(e) => setInlineLead({ ...inlineLead, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-r-xl bg-white/10 border border-white/20 text-white placeholder-amber-200/50 text-xs focus:outline-none focus:border-[#D4AF37] shadow-inner"
-                  />
+          <div className="bg-white rounded-3xl border border-stone-300 shadow-xl overflow-hidden max-w-3xl mx-auto p-6 sm:p-10">
+            <form onSubmit={handleRsvpSubmit} className="space-y-6">
+              
+              {/* Header Box */}
+              <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="text-xs font-mono uppercase text-[#722f37] font-bold">Simulating Guest Invitation</span>
+                  <div className="font-serif font-bold text-stone-950 text-lg">The Sharma Family</div>
+                  <div className="text-xs text-stone-600 mt-0.5">Invited by: Groom's Parents (Anil &amp; Sunita)</div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-stone-700">Attending Count:</span>
+                  <div className="flex items-center border border-stone-300 rounded-lg bg-white">
+                    <button
+                      type="button"
+                      onClick={() => setGuestCount(Math.max(1, guestCount - 1))}
+                      className="px-3 py-1 text-stone-600 hover:bg-stone-100 font-bold text-sm"
+                    >
+                      -
+                    </button>
+                    <span className="px-3 py-1 font-mono font-bold text-sm text-stone-900">{guestCount}</span>
+                    <button
+                      type="button"
+                      onClick={() => setGuestCount(Math.min(4, guestCount + 1))}
+                      className="px-3 py-1 text-stone-600 hover:bg-stone-100 font-bold text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2">
-                <select
-                  value={inlineLead.city}
-                  onChange={(e) => setInlineLead({ ...inlineLead, city: e.target.value })}
-                  className="flex-1 px-4 py-3 rounded-xl bg-[#2A0812] border border-white/20 text-amber-100 text-xs focus:outline-none focus:border-[#D4AF37]"
-                >
-                  {WEDDING_CITIES.map((c, i) => (
-                    <option key={i} value={c} className="bg-[#2A0812] text-white">
-                      {c}
-                    </option>
-                  ))}
-                </select>
+              {/* Ceremonies List */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 mb-3">
+                  Select Functions Attending
+                </label>
+                <div className="space-y-3">
+                  {SAMPLE_EVENTS.map(ev => {
+                    const isInvited = ev.invited;
+                    const isChecked = isInvited ? rsvpState[ev.id] : false;
 
-                <button
-                  type="submit"
-                  disabled={formSubmitting}
-                  className="px-6 py-3 rounded-xl bg-[#D4AF37] hover:bg-[#FBBF24] text-[#2A0812] font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  <span>{formSubmitting ? 'Submitting...' : 'Claim VIP Access Link'}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                    return (
+                      <div
+                        key={ev.id}
+                        className={`p-4 rounded-xl border transition-all flex items-center justify-between ${
+                          !isInvited
+                            ? 'bg-stone-50 border-stone-200 opacity-50 cursor-not-allowed'
+                            : isChecked
+                            ? 'bg-rose-50/60 border-[#722f37] ring-1 ring-[#722f37]'
+                            : 'bg-white border-stone-300 hover:border-stone-400'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            disabled={!isInvited}
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (isInvited) {
+                                setRsvpState({ ...rsvpState, [ev.id]: e.target.checked });
+                              }
+                            }}
+                            className="w-4 h-4 rounded text-[#722f37] focus:ring-[#722f37] cursor-pointer"
+                          />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-stone-950 text-sm">{ev.name}</span>
+                              {!isInvited && (
+                                <span className="text-[10px] font-mono bg-stone-200 text-stone-600 px-2 py-0.5 rounded font-semibold">
+                                  Not in Guest Scope
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-stone-500 mt-0.5 flex flex-wrap items-center gap-2">
+                              <span>📅 {ev.date}</span>
+                              <span>·</span>
+                              <span>⏰ {ev.time}</span>
+                              <span>·</span>
+                              <span>📍 {ev.venue}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <span className="text-xs font-mono font-semibold text-stone-600">
+                          {isInvited && isChecked ? `${guestCount} attending` : 'Decline'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </form>
 
-            <div className="pt-4 flex items-center justify-center gap-4 text-[11px] text-amber-200/70">
-              <span className="flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                Zero spam. Strict privacy.
-              </span>
-              <span>&bull;</span>
-              <span>Instant WhatsApp confirmation</span>
+              {/* Dietary Preferences */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 mb-2">
+                  Dietary Preferences for Catering
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { id: 'jain', label: 'Jain Vegetarian' },
+                    { id: 'veg', label: 'Pure Vegetarian' },
+                    { id: 'non-veg', label: 'Non-Vegetarian' },
+                  ].map(d => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => setDietary(d.id)}
+                      className={`p-3 rounded-xl border text-xs font-bold transition-all ${
+                        dietary === d.id
+                          ? 'border-[#722f37] bg-rose-50 text-[#722f37]'
+                          : 'border-stone-300 bg-white text-stone-700 hover:bg-stone-50'
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Submit CTA */}
+              <button
+                type="submit"
+                className="w-full bg-[#722f37] hover:bg-[#581c24] text-white font-extrabold text-sm py-4 rounded-xl shadow-lg shadow-[#722f37]/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Confirm Family RSVP (Instant Sync)</span>
+                <Sparkles className="w-4 h-4 text-amber-200" />
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Catering Plate Savings Calculator */}
+      <section id="savings" className="py-20 bg-white border-b border-stone-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#722f37] bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+              Interactive Tool 02
+            </span>
+            <h2 className="text-3xl font-serif font-extrabold text-stone-950 mt-3">
+              Catering Budget &amp; Headcount Calculator
+            </h2>
+            <p className="text-sm text-stone-600 mt-2">
+              Un-scoped invitations and open spreadsheets lead to 15–25% unwanted plate waste. See how much Hinged saves your catering budget.
+            </p>
+          </div>
+
+          <div className="bg-stone-900 text-white rounded-3xl p-8 sm:p-12 max-w-4xl mx-auto shadow-2xl border border-stone-800">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              
+              {/* Sliders */}
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-stone-300">
+                      Total Wedding Guestlist Size
+                    </label>
+                    <span className="text-sm font-mono font-bold text-amber-300 bg-stone-800 px-2.5 py-0.5 rounded border border-stone-700">
+                      {totalGuests} Guests
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="150"
+                    max="1500"
+                    step="50"
+                    value={totalGuests}
+                    onChange={(e) => setTotalGuests(Number(e.target.value))}
+                    className="w-full h-2 bg-stone-700 rounded-lg appearance-none cursor-pointer accent-[#d4af37]"
+                  />
+                  <div className="flex justify-between text-[11px] text-stone-400 mt-1 font-mono">
+                    <span>150 (Intimate)</span>
+                    <span>750</span>
+                    <span>1,500 (Grand)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-stone-300">
+                      Average Catering Cost Per Plate
+                    </label>
+                    <span className="text-sm font-mono font-bold text-amber-300 bg-stone-800 px-2.5 py-0.5 rounded border border-stone-700">
+                      ₹{plateCost.toLocaleString('en-IN')} / plate
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1200"
+                    max="6000"
+                    step="200"
+                    value={plateCost}
+                    onChange={(e) => setPlateCost(Number(e.target.value))}
+                    className="w-full h-2 bg-stone-700 rounded-lg appearance-none cursor-pointer accent-[#d4af37]"
+                  />
+                  <div className="flex justify-between text-[11px] text-stone-400 mt-1 font-mono">
+                    <span>₹1,200</span>
+                    <span>₹3,500</span>
+                    <span>₹6,000+ (5-Star Luxury)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Savings Output Box */}
+              <div className="bg-stone-800/90 rounded-2xl p-6 border border-stone-700/80 text-center flex flex-col justify-center">
+                <span className="text-xs font-mono uppercase tracking-widest text-amber-300">Projected Catering Savings</span>
+                <div className="text-3xl sm:text-5xl font-serif font-black text-white mt-2">
+                  ₹{savings.moneySaved.toLocaleString('en-IN')}
+                </div>
+                <div className="text-xs text-stone-300 mt-2">
+                  Prevented <strong>~{savings.uninvitedPlatesPrevented} uninvited / unconfirmed plates</strong> across intimate ceremonies.
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-stone-700/80 flex items-center justify-around text-xs text-stone-400">
+                  <div>
+                    <span className="block font-bold text-white text-sm">30 Seconds</span>
+                    <span>Guest RSVP Time</span>
+                  </div>
+                  <div className="w-px h-8 bg-stone-700"></div>
+                  <div>
+                    <span className="block font-bold text-white text-sm">100% Mobile</span>
+                    <span>No App Downloads</span>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="px-4 py-12 max-w-6xl mx-auto text-center space-y-4 text-xs text-gray-500 border-t border-[#E5DCCF]">
-        <div className="flex items-center justify-center gap-2 font-serif font-bold text-gray-900 text-base">
-          <div className="h-6 w-6 rounded-lg bg-[#800020] text-white flex items-center justify-center font-serif text-xs">
-            H
+      {/* Comparison Matrix */}
+      <section className="py-20 bg-stone-50 border-b border-stone-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#722f37] bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+              The Architecture Advantage
+            </span>
+            <h2 className="text-3xl font-serif font-extrabold text-stone-950 mt-3">
+              Why Generic Wedding Sites Fail in India
+            </h2>
+            <p className="text-sm text-stone-600 mt-2">
+              Western platforms like The Knot and Zola were built for single-day church weddings. Hinged was built for Indian celebrations.
+            </p>
           </div>
-          <span>Hinged &bull; Open-Source Wedding Coordination</span>
-        </div>
-        <p className="max-w-md mx-auto text-gray-600">
-          Crafted with love for couples, families, and luxury wedding planners worldwide. Distributed under the MIT License.
-        </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-4 pt-2 font-medium">
-          <button onClick={() => setActiveLeadModal('demo')} className="hover:text-[#800020] cursor-pointer">
-            Jaipur Demo
-          </button>
-          <span>&bull;</span>
-          <button onClick={() => setActiveLeadModal('couple')} className="hover:text-[#800020] cursor-pointer">
-            Early Access
-          </button>
-          <span>&bull;</span>
-          <button onClick={() => setActiveLeadModal('planner')} className="hover:text-[#800020] cursor-pointer">
-            Planners
-          </button>
-          <span>&bull;</span>
-          <button onClick={() => setActiveLeadModal('founder')} className="hover:text-[#800020] cursor-pointer">
-            Founder Connect
-          </button>
-          <span>&bull;</span>
-          <a
-            href="https://github.com/Wedding-Tribe/hinged"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[#800020] flex items-center gap-1"
-          >
-            <Github className="w-3.5 h-3.5" />
-            <span>GitHub Repository</span>
-          </a>
+          <div className="overflow-x-auto max-w-5xl mx-auto">
+            <table className="w-full bg-white rounded-2xl border border-stone-200 shadow-md text-left text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-stone-200 bg-stone-100">
+                  <th className="py-4 px-5 font-bold text-stone-900">Feature &amp; Workflow</th>
+                  <th className="py-4 px-5 font-bold text-stone-500">Western Sites (The Knot/Zola)</th>
+                  <th className="py-4 px-5 font-bold text-stone-500">Messy WhatsApp &amp; Excel</th>
+                  <th className="py-4 px-5 font-extrabold text-[#722f37] bg-rose-50/80">Hinged Platform</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                <tr>
+                  <td className="py-4 px-5 font-semibold text-stone-900">Multi-Event Scoping</td>
+                  <td className="py-4 px-5 text-stone-500">Single event only</td>
+                  <td className="py-4 px-5 text-rose-600 font-medium">38-column manual VLOOKUPs</td>
+                  <td className="py-4 px-5 font-bold text-emerald-700 bg-rose-50/40">Automatic Scoped Token Links</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-5 font-semibold text-stone-900">Guest Channel</td>
+                  <td className="py-4 px-5 text-rose-600 font-medium">Email invites (&lt;15% open rates)</td>
+                  <td className="py-4 px-5 text-stone-600">Chaotic WhatsApp groups</td>
+                  <td className="py-4 px-5 font-bold text-emerald-700 bg-rose-50/40">WhatsApp-Native 1-Click Opens</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-5 font-semibold text-stone-900">Guest List Privacy</td>
+                  <td className="py-4 px-5 text-rose-600 font-medium">Public search leaks guestlist</td>
+                  <td className="py-4 px-5 text-stone-500">Spreadsheet accidentally forwarded</td>
+                  <td className="py-4 px-5 font-bold text-emerald-700 bg-rose-50/40">Zero Public Indexing · Strict Tokens</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-5 font-semibold text-stone-900">Headcount Enforcement</td>
+                  <td className="py-4 px-5 text-stone-500">Generic +1 checkboxes</td>
+                  <td className="py-4 px-5 text-rose-600 font-medium">Relatives bring surprise +4 guests</td>
+                  <td className="py-4 px-5 font-bold text-emerald-700 bg-rose-50/40">Strict Household Caps (max_attendees)</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-5 font-semibold text-stone-900">Cultural Themes</td>
+                  <td className="py-4 px-5 text-stone-500">Western pastel church layouts</td>
+                  <td className="py-4 px-5 text-stone-400">None</td>
+                  <td className="py-4 px-5 font-bold text-emerald-700 bg-rose-50/40">Royal Indian, Modern Editorial &amp; Floral</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+      </section>
 
-        <div className="text-[11px] text-gray-400 pt-2 font-mono">
-          &copy; {new Date().getFullYear()} Wedding-Tribe &bull; Built with React, Vite &amp; Tailwind CSS
+      {/* Footer */}
+      <footer className="bg-white border-t border-stone-200 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#722f37] flex items-center justify-center text-white text-base font-bold">
+                💍
+              </div>
+              <div>
+                <span className="font-serif font-bold text-lg text-stone-950">Hinged</span>
+                <p className="text-xs text-stone-500">One link for your wedding. Every guest, every function, every detail.</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6 text-xs text-stone-600 font-medium">
+              <a
+                href="https://github.com/Wedding-Tribe/hinged"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-stone-950 flex items-center gap-1"
+              >
+                <span>GitHub Repository</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+              <a
+                href="https://github.com/Wedding-Tribe/hinged/blob/main/docs/architecture.md"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-stone-950"
+              >
+                Architecture Spec
+              </a>
+              <a
+                href="https://github.com/Wedding-Tribe/hinged/blob/main/ROADMAP.md"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-stone-950"
+              >
+                Roadmap
+              </a>
+              <a
+                href="https://1997agarwal.github.io"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-[#722f37] font-semibold"
+              >
+                Architected by Harshit Agarwal ↗
+              </a>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-8 border-t border-stone-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-400">
+            <p>© {new Date().getFullYear()} Hinged Platform (Wedding-Tribe). Open Source under MIT License.</p>
+            <p>10/10 Automated Tests Passing · 4-File Parity Governance · WhatsApp Native</p>
+          </div>
         </div>
       </footer>
 
-      {/* MODAL 1: COUPLE & FAMILY EARLY ACCESS LEAD FORM */}
-      {activeLeadModal === 'couple' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div
-            className="relative w-full max-w-lg bg-[#FAF7F2] rounded-3xl border border-[#D4AF37]/40 shadow-2xl p-6 sm:p-8 overflow-y-auto max-h-[90vh] custom-scrollbar text-[#231F20]"
-            onClick={(e) => e.stopPropagation()}
-          >
+      {/* Early Access Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-stone-200 relative animate-fade-in">
             <button
-              onClick={() => setActiveLeadModal(null)}
-              className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-black/5 cursor-pointer"
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-stone-400 hover:text-stone-700"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="space-y-1 mb-5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#800020]/10 text-[#800020] border border-[#800020]/20">
-                <Heart className="w-3.5 h-3.5 text-[#800020]" />
-                Couple &amp; Family Priority Access
-              </span>
-              <h3 className="text-2xl font-serif font-bold text-gray-900">
-                Create Your Digital Wedding Hub
-              </h3>
-              <p className="text-xs text-gray-600">
-                Fill in your celebration details. We will configure your scoped WhatsApp RSVP hub and assign you dedicated onboarding assistance.
-              </p>
+            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-center text-[#722f37] mb-4 text-lg">
+              💍
             </div>
 
-            <form onSubmit={handleCoupleLeadSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1">Your Full Name *</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="e.g. Aarav Mehta"
-                    value={coupleForm.coupleName}
-                    onChange={(e) => setCoupleForm({ ...coupleForm, coupleName: e.target.value })}
-                    className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1">Partner / Family Name *</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="e.g. Meera Kapoor"
-                    value={coupleForm.partnerName}
-                    onChange={(e) => setCoupleForm({ ...coupleForm, partnerName: e.target.value })}
-                    className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                  />
-                </div>
+            <h3 className="text-xl font-serif font-bold text-stone-950">
+              Get Early Access to Hinged
+            </h3>
+            <p className="text-xs text-stone-600 mt-1.5 leading-relaxed">
+              Planning your wedding or coordinating celebrations for your family? Leave your details to get a private demo workspace set up for your wedding.
+            </p>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setShowModal(false);
+                setToastMsg('Thank you! We will reach out on WhatsApp to set up your wedding workspace.');
+              }}
+              className="mt-6 space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">Couple / Family Names</label>
+                <input
+                  required
+                  type="text"
+                  placeholder="e.g. Aarav &amp; Meera"
+                  className="w-full text-xs p-3 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#722f37]"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-800 mb-1">WhatsApp Mobile Number *</label>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">WhatsApp Mobile Number</label>
                 <div className="flex">
-                  <span className="inline-flex items-center px-3.5 text-xs font-bold bg-gray-100 border border-r-0 border-gray-300 rounded-l-xl text-gray-700 font-mono">
+                  <span className="inline-flex items-center px-3 text-xs bg-stone-100 border border-r-0 border-stone-300 rounded-l-lg text-stone-600 font-mono">
                     +91
                   </span>
                   <input
@@ -1221,307 +805,41 @@ export default function App() {
                     type="tel"
                     pattern="[0-9]{10}"
                     placeholder="9876543210"
-                    value={coupleForm.whatsapp}
-                    onChange={(e) => setCoupleForm({ ...coupleForm, whatsapp: e.target.value })}
-                    className="w-full text-xs p-3 rounded-r-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
+                    className="w-full text-xs p-3 rounded-r-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#722f37]"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1">Wedding City / Destination *</label>
-                  <select
-                    value={coupleForm.city}
-                    onChange={(e) => setCoupleForm({ ...coupleForm, city: e.target.value })}
-                    className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                  >
-                    {WEDDING_CITIES.map((c, i) => (
-                      <option key={i} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1">Approximate Wedding Date</label>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">Wedding City</label>
                   <input
-                    type="date"
-                    value={coupleForm.weddingDate}
-                    onChange={(e) => setCoupleForm({ ...coupleForm, weddingDate: e.target.value })}
-                    className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
+                    required
+                    type="text"
+                    placeholder="e.g. Jaipur / Udaipur"
+                    className="w-full text-xs p-3 rounded-lg border border-stone-300"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1">Expected Guest Count</label>
-                  <select
-                    value={coupleForm.guestCount}
-                    onChange={(e) => setCoupleForm({ ...coupleForm, guestCount: e.target.value })}
-                    className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                  >
-                    <option>Under 200 Guests (Intimate)</option>
-                    <option>200 - 350 Guests</option>
-                    <option>350 - 500 Guests (Standard)</option>
-                    <option>500 - 800 Guests</option>
-                    <option>800+ Guests (Grand Luxury)</option>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">Approx. Guest Count</label>
+                  <select className="w-full text-xs p-3 rounded-lg border border-stone-300 bg-white text-stone-800">
+                    <option>100–300 guests</option>
+                    <option>300–600 guests</option>
+                    <option>600–1,200+ guests</option>
                   </select>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1">Preferred Stationery Theme</label>
-                  <select
-                    value={coupleForm.themePreference}
-                    onChange={(e) => setCoupleForm({ ...coupleForm, themePreference: e.target.value })}
-                    className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                  >
-                    <option>Royal Indian (Regal Jewel Burgundy &amp; Gold)</option>
-                    <option>Modern Editorial (Minimalist High-Fashion)</option>
-                    <option>Floral Celebration (Romantic Blush &amp; Sage)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-800 mb-1">Special Notes / Requirements</label>
-                <textarea
-                  rows="2"
-                  placeholder="e.g. Need hotel room allocation for 60 rooms, airport shuttle coordination..."
-                  value={coupleForm.notes}
-                  onChange={(e) => setCoupleForm({ ...coupleForm, notes: e.target.value })}
-                  className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                />
               </div>
 
               <button
                 type="submit"
-                disabled={formSubmitting}
-                className="w-full py-3.5 rounded-xl bg-[#800020] hover:bg-[#660019] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full bg-[#722f37] hover:bg-[#581c24] text-white font-bold text-xs py-3.5 rounded-lg shadow-md transition-all active:scale-95"
               >
-                <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-                <span>{formSubmitting ? 'Submitting...' : 'Register for Early Access'}</span>
+                Request Private Wedding Setup
               </button>
             </form>
           </div>
         </div>
       )}
-
-      {/* MODAL 2: WEDDING PLANNER & COORDINATOR LEAD FORM */}
-      {activeLeadModal === 'planner' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div
-            className="relative w-full max-w-lg bg-[#FAF7F2] rounded-3xl border border-[#D4AF37]/40 shadow-2xl p-6 sm:p-8 overflow-y-auto max-h-[90vh] custom-scrollbar text-[#231F20]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setActiveLeadModal(null)}
-              className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-black/5 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-1 mb-5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#800020]/10 text-[#800020] border border-[#800020]/20">
-                <Users className="w-3.5 h-3.5 text-[#800020]" />
-                B2B Agency Partnership
-              </span>
-              <h3 className="text-2xl font-serif font-bold text-gray-900">
-                Wedding Planner Enterprise Hub
-              </h3>
-              <p className="text-xs text-gray-600">
-                Partner with Hinged to equip your couples with white-label WhatsApp hubs, staff permissions, and direct banquet exports.
-              </p>
-            </div>
-
-            <form onSubmit={handlePlannerLeadSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1">Agency / Brand Name *</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="e.g. Royal Knot Planners"
-                    value={plannerForm.agencyName}
-                    onChange={(e) => setPlannerForm({ ...plannerForm, agencyName: e.target.value })}
-                    className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1">Lead Coordinator Name *</label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="e.g. Priya Singhania"
-                    value={plannerForm.contactName}
-                    onChange={(e) => setPlannerForm({ ...plannerForm, contactName: e.target.value })}
-                    className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1">Work Email Address *</label>
-                  <input
-                    required
-                    type="email"
-                    placeholder="priya@royalknot.com"
-                    value={plannerForm.workEmail}
-                    onChange={(e) => setPlannerForm({ ...plannerForm, workEmail: e.target.value })}
-                    className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1">WhatsApp Mobile *</label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-3 text-xs font-bold bg-gray-100 border border-r-0 border-gray-300 rounded-l-xl text-gray-700 font-mono">
-                      +91
-                    </span>
-                    <input
-                      required
-                      type="tel"
-                      pattern="[0-9]{10}"
-                      placeholder="9876543210"
-                      value={plannerForm.whatsapp}
-                      onChange={(e) => setPlannerForm({ ...plannerForm, whatsapp: e.target.value })}
-                      className="w-full text-xs p-3 rounded-r-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-800 mb-1">Annual Weddings Coordinated</label>
-                <select
-                  value={plannerForm.annualWeddings}
-                  onChange={(e) => setPlannerForm({ ...plannerForm, annualWeddings: e.target.value })}
-                  className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                >
-                  <option>1 - 5 Weddings / Year</option>
-                  <option>5 - 15 Weddings / Year</option>
-                  <option>15 - 30 Weddings / Year</option>
-                  <option>30+ Weddings / Year (Enterprise Agency)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-800 mb-1">Primary Operating Destinations</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Udaipur, Jaipur, Goa, Dubai, Thailand"
-                  value={plannerForm.primaryCities}
-                  onChange={(e) => setPlannerForm({ ...plannerForm, primaryCities: e.target.value })}
-                  className="w-full text-xs p-3 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#800020]"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={formSubmitting}
-                className="w-full py-3.5 rounded-xl bg-[#800020] hover:bg-[#660019] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                <Users className="w-4 h-4 text-[#D4AF37]" />
-                <span>{formSubmitting ? 'Submitting...' : 'Submit Planner Partnership Inquiry'}</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 3: INTERACTIVE DEMO UNBOXER */}
-      {activeLeadModal === 'demo' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div
-            className="relative w-full max-w-lg bg-[#FAF7F2] rounded-3xl border border-[#D4AF37]/40 shadow-2xl p-6 sm:p-8 text-[#231F20]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setActiveLeadModal(null)}
-              className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-black/5 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-1 mb-5">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#D4AF37]/20 text-[#800020] border border-[#D4AF37]/30">
-                <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-                Interactive Demo Walkthrough
-              </span>
-              <h3 className="text-2xl font-serif font-bold text-gray-900">
-                Aarav &amp; Meera in Jaipur
-              </h3>
-              <p className="text-xs text-gray-600">
-                Choose which perspective you want to explore in the live Hinged environment:
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <div className="p-4 rounded-2xl bg-white border border-[#E5DCCF] space-y-2">
-                <div className="flex items-center gap-2 font-serif font-bold text-sm text-[#800020]">
-                  <Users className="w-4 h-4" />
-                  <h4>1. Host Coordinator Command Center</h4>
-                </div>
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  Manage ceremonies, track live RSVPs, monitor catering headcounts, import CSV spreadsheets, and compose WhatsApp updates.
-                </p>
-                <div className="pt-2">
-                  <a
-                    href="https://github.com/Wedding-Tribe/hinged"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#800020] hover:underline"
-                  >
-                    <span>Inspect Host Architecture on GitHub</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white border border-[#E5DCCF] space-y-2">
-                <div className="flex items-center gap-2 font-serif font-bold text-sm text-[#800020]">
-                  <Send className="w-4 h-4" />
-                  <h4>2. Guest Mobile Experience</h4>
-                </div>
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  Test the tokenized guest invitation: live countdown, ceremony timeline, hotel and shuttle cards, and scoped RSVP confirmation.
-                </p>
-                <div className="pt-2">
-                  <button
-                    onClick={() => {
-                      setActiveLeadModal('couple');
-                    }}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#800020] hover:underline cursor-pointer"
-                  >
-                    <span>Request Live Access Credentials</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 pt-4 border-t border-gray-200 flex items-center justify-between">
-              <button
-                onClick={() => {
-                  setActiveLeadModal(null);
-                  setActiveLeadModal('founder');
-                }}
-                className="text-xs font-bold text-[#800020] hover:underline cursor-pointer flex items-center gap-1"
-              >
-                <span>Prefer a live walkthrough with Founder?</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 4: FOUNDER CONNECT MODAL */}
-      <FounderConnectModal
-        isOpen={activeLeadModal === 'founder'}
-        onClose={() => setActiveLeadModal(null)}
-      />
     </div>
   );
 }
